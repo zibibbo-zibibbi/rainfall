@@ -64,3 +64,33 @@ I also don't understand how you would adapt you strategy and code to the additio
 ```
 
 Hollow blocks E4/F4/G4/G5 would not retain any water of course, but how would you figure that out with your current approach, or even with your initial conceptual strategy? Can you explain?
+
+---
+
+I must admit I find your one-line answer rather difficult to parse. Hey, I think I've to agree with you that some redundancy helps! I guess I'm just not a twitter person...
+
+Anyway, terseness notwithstanding, I think I'm starting to see how the "dynamic" simulation could work, by filling some cells with some amount of water and then leaking back and forth, one cell at a time until a steady state is reached, although I need to think more about the details. I'm still totally clueless about your notion of 'nothing' though (some code would of course go a long way toward clarifying the concept).
+
+Just to reiterate on the hollow blocks thing, in case I wasn't too clear, how would you distinguish between these two "skylines":
+
+```
+    6 ######X##
+    5 ######X##
+    4 XXX#XXX##
+    3 ##X#X####
+    2 ##XXX####
+    1 #########
+      ABCDEFGHI
+
+    6 ######X##
+    5 XXX###X##
+    4 ##X#XXX##
+    3 ##X#X####
+    2 ##XXX####
+    1 #########
+      ABCDEFGHI
+```
+
+The difference, of course, is that the "drain" in column A is placed at different heights. In the first case only C3, C2, D2, E2 and E3 would be filled at the end of the process (I'm talking about the final, stationary state). In the second one E4/F4/G4 (and also C4, of course) would be filled as well. So in this case water has also to leak up, but only if in that cell there's enough water pressure to actually push it up. I suppose it could be solved for example by calculating for each non-solid cell some sort of maximum water pressure it can withstand before water can leak into it even when it's already full, or some equivalent notion, but how extensive would the changes to the code be?
+
+Also, would the "dynamic simulation mode" still work once you start accounting for all that in the model? I'm still pretty confused about that...

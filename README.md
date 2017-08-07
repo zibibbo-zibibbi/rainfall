@@ -1,5 +1,7 @@
 ### Hollow blocks
 
+**Update 1**: Fixed a compile error caused by a last-minute untested change
+
 I've written a first draft of a tentative solution for the rainfall problem with hollow blocks. It's a work in progress, and it's not even really complete, but it already works with very small inputs. The code is in [hollow-blocks-A.hs](./hollow-blocks-A.hs). I'll keep updating both the code and this document, but the old versions will be always available through the commit history. Performance is terrible, among other things I'm still using lists everywhere, even when random access is required, but I think that can be fixed. I've done a bit of testing, but don't be surprised if you find a bug. Just let me know, and I'll fix it, if I can. Also note that I've only a basic knowledge of Haskell, this may well be the most complex Haskell program I've ever written, so please don't blame the language, or the paradigm, or anything else, for what is just incompetence on the developer's part.
 
 With all that in mind, here's how it works: we first divide the world in a set of interconnected "cells", that is, rectangular regions of space that that can contain water. Whether that region is a piece of sky, or a hollow section of a tower, is irrelevant. Cells can only touch one another by the sides, not by the floor or ceiling. Then for each cell *c* we define a quantity, let's call it *L(c)*, as follow: suppose it rains for a sufficiently long time, until the entire system reaches a stationary/equilibrium state. At that point, a number of things may happen:

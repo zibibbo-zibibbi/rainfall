@@ -63,12 +63,12 @@ stepsV u es ss n = if n == 0 then ss else stepsV u es ss' (n-1) where
 rainfall :: [[Int]] -> Int
 rainfall slices = sum water where
   (cells, adjList)  = geometry slices
-  reached i r rs    = foldl1 (||) (r:rs)
+  reached i r rs    = foldl (||) r rs
   reachable         = fixpointV reached adjList [h == 0 | (_, _, h) <- cells]
   last              = length slices - 1
   levels'           = [ if x == 0 || x == last || not (reachable !! i) then f else infinite
                         | ((x, f, _), i) <- zip cells [0..]]
-  update i l ls     = max (floorY $ cells !! i) $ foldl1 min (l:ls)
+  update i l ls     = max (floorY $ cells !! i) $ foldl min l ls
   levels            = fixpointV update adjList levels'
   water             = zipWith (\c l -> min (height c) (l - floorY c)) cells levels
 

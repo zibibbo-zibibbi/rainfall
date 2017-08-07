@@ -48,26 +48,27 @@ geometry ss = (cells, adjList) where
 
 --------------------------------------------------------------------------------
 
-fixpointV :: Eq a => ([a] -> Int -> a) -> [[Int]] -> [a] -> [a]
-fixpointV f es v = if v == v' then v else fixpointV f es v'
-  where v' = [f v i | i <- [0 .. length v - 1]]
+fixpointV :: Eq a => (Int -> a -> [a] -> a) -> [[Int]] -> [a] -> [a]
+fixpointV u es ss = if ss == ss' then ss else fixpointV u es ss' where
+  ss' = [u i (ss !! i) [ss !! j | j <- es !! i] | i <- [0 .. length ss - 1]]
 
-stepsV :: ([a] -> Int -> a) -> [a] -> Int -> [a]
-stepsV f v n = if n == 0 then v else stepsV f [f v i | i <- [0 .. length v - 1]] (n-1)
+stepsV :: (Int -> a -> [a] -> a) -> [[Int]] -> [a] -> Int -> [a]
+stepsV u es ss n = if n == 0 then ss else stepsV u es ss' (n-1) where
+  ss' = [u i (ss !! i) [ss !! j | j <- es !! i] | i <- [0 .. length ss - 1]]
 
 --------------------------------------------------------------------------------
 
--- rainfall ss n = stepsV update levels' n where
+-- rainfall slices n = stepsV update adjList levels' n where
 
 rainfall :: [[Int]] -> Int
 rainfall slices = sum water where
   (cells, adjList)  = geometry slices
-  reached rs i      = foldl1 (||) [rs !! j | j <- i : adjList !! i]
+  reached i r rs    = foldl1 (||) (r:rs)
   reachable         = fixpointV reached adjList [h == 0 | (_, _, h) <- cells]
   last              = length slices - 1
   levels'           = [ if x == 0 || x == last || not (reachable !! i) then f else infinite
                         | ((x, f, _), i) <- zip cells [0..]]
-  update ls i       = max (floorY $ cells !! i) $ foldl1 min [ls !! j | j <- i : adjList !! i]
+  update i l ls     = max (floorY $ cells !! i) $ foldl1 min (l:ls)
   levels            = fixpointV update adjList levels'
   water             = zipWith (\c l -> min (height c) (l - floorY c)) cells levels
 

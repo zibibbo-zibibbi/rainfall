@@ -2,6 +2,8 @@
 
 **Update 1**: Fixed a compile error caused by a last-minute untested change
 
+**Update 2**: Improved the *fixpointV* function
+
 I've written a first draft of a tentative solution for the rainfall problem with hollow blocks. It's a work in progress, and it's not even really complete, but it already works with very small inputs. The code is in [hollow-blocks-A.hs](./hollow-blocks-A.hs). I'll keep updating both the code and this document, but the old versions will be always available through the commit history. Performance is terrible, among other things I'm still using lists everywhere, even when random access is required, but I think that can be fixed. I've done a bit of testing, but don't be surprised if you find a bug. Just let me know, and I'll fix it, if I can. Also note that I've only a basic knowledge of Haskell, this may well be the most complex Haskell program I've ever written, so please don't blame the language, or the paradigm, or anything else, for what is just incompetence on the developer's part.
 
 With all that in mind, here's how it works: we first divide the world in a set of interconnected "cells", that is, rectangular regions of space that that can contain water. Whether that region is a piece of sky, or a hollow section of a tower, is irrelevant. Cells can only touch one another by the sides, not by the floor or ceiling. Then for each cell *c* we define a quantity, let's call it *L(c)*, as follow: suppose it rains for a sufficiently long time, until the entire system reaches a stationary/equilibrium state. At that point, a number of things may happen:
@@ -24,12 +26,12 @@ The first step is to produce a list of all "cells" in the system, along with the
 The one thing that I haven't really implemented is the fixpointV function, I've just provided a sort of "operational/constructive specification" for it, which is enough to do some testing and deal with very small inputs, but not much more:
 
 ```haskell
-    fixpointV :: Eq a => ([a] -> Int -> a) -> [[Int]] -> [a] -> [a]
-    fixpointV f _ v = if v == v' then v else fixpointV f v'
-      where v' = [f v i | i <- [0 .. length v - 1]]
+    fixpointV :: Eq a => (Int -> a -> [a] -> a) -> [[Int]] -> [a] -> [a]
+    fixpointV u es ss = if ss == ss' then ss else fixpointV u es ss' where
+      ss' = [u i (ss !! i) [ss !! j | j <- es !! i] | i <- [0 .. length ss - 1]]
 ```
 
-It takes three arguments: the last one is the initial state of all nodes in the graph, the second one is the set of edges of the graph, represented as an adjacency list; and the first one is the update function which takes the current state of the entire graph, and the index of a node, and returns a new value for the state of that node.
+It takes three arguments: the last one is the initial state of all nodes in the graph, the second one is the set of edges of the graph, represented as an adjacency list; and the first one is the update function which takes the index of the current node, its state and the states of all adjacent ones, and returns a new value for its state. The nodes of the adjacent states are provided in the same order in which they appear in the adjacency list, so if the update function needs other pieces of information about those nodes it can always retrieve them.
 
 Such a fixpoint function is of course reasonably easy to implement in a language that provides mutable array, but becomes (as far as I can tell) a lot more complicated without them. I guess in Haskell that would have to be done using the ST monad, but doing that is sort of above my pay grade. I'll try to do it (maybe I'll even start to get the hang of monadic programming in the process), but any sort of help from experienced Haskell programmers would be appreciated, if any of them were to read this (in particular I'd like to know if there's a way to implement it that preserves the parallelism that is intrinsic to the problem).
 

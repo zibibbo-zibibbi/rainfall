@@ -10,14 +10,14 @@ height  (_, _, h) = if h == 0 then infinite else h
 --------------------------------------------------------------------------------
 
 adjacencies :: Int -> [(Int, Int)] -> Int -> [(Int, Int)] -> [(Int, Int)]
-adjacencies _ [] _  _  = []
-adjacencies _ _  _ []  = []
-adjacencies id1 l1@((f1, h1):t1) id2 l2@((f2, h2):t2) = result where
+adjacencies id1 l1 id2 l2 = if null l1 || null l2 then [] else result where
+  (f1, h1)      = head l1
+  (f2, h2)      = head l2
   ceiling1      = if h1 == 0 then infinite else f1 + h1
   ceiling2      = if h2 == 0 then infinite else f2 + h2
   overlap       = ((f1 >= f2) && (f1 < ceiling2)) || ((f2 >= f1) && (f2 < ceiling1))
-  (id1', left1) = if ceiling1 > ceiling2 then (id1, l1) else (id1+1, t1)
-  (id2', left2) = if ceiling2 > ceiling1 then (id2, l2) else (id2+1, t2)
+  (id1', left1) = if ceiling1 > ceiling2 then (id1, l1) else (id1+1, tail l1)
+  (id2', left2) = if ceiling2 > ceiling1 then (id2, l2) else (id2+1, tail l2)
   rest          = adjacencies id1' left1 id2' left2
   result        = if overlap then (id1, id2) : rest else rest
 
@@ -41,9 +41,8 @@ geometry ss = (cells, adjList) where
   slices    = zipWith (\i s -> [(i, a, b) | (a, b) <- s]) [0..] slices'
   offsets   = scanl (+) 0 $ map length slices
   cells     = concat slices
-  adjs      = concat [
-                adjacencies (offsets !! i) (slices' !! i) (offsets !! (i+1)) (slices' !! (i+1))
-                | i <- [0..length slices - 2]]
+  adjs' i   = adjacencies (offsets !! i) (slices' !! i) (offsets !! (i+1)) (slices' !! (i+1))
+  adjs      = concat [adjs' i | i <- [0..length slices - 2]]
   adjList   = toAdjList (length cells) adjs
 
 --------------------------------------------------------------------------------
@@ -65,9 +64,9 @@ rainfall slices = sum water where
   (cells, adjList)  = geometry slices
   reached i r rs    = foldl (||) r rs
   reachable         = fixpointV reached adjList [h == 0 | (_, _, h) <- cells]
-  last              = length slices - 1
-  levels'           = [ if x == 0 || x == last || not (reachable !! i) then f else infinite
-                        | ((x, f, _), i) <- zip cells [0..]]
+  lastSlice         = length slices - 1
+  noWater i x       = x == 0 || x == lastSlice || not (reachable !! i)
+  levels'           = [if noWater i x then f else infinite | ((x, f, _), i) <- zip cells [0..]]
   update i l ls     = max (floorY $ cells !! i) $ foldl min l ls
   levels            = fixpointV update adjList levels'
   water             = zipWith (\c l -> min (height c) (l - floorY c)) cells levels
